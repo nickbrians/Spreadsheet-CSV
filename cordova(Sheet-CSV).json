@@ -1,0 +1,285 @@
+{
+  "name": "cordova(Sheet-CSV)",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -592,
+        0
+      ],
+      "id": "3137e471-d5ba-411c-9147-eff2aaf65378",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1BLId0kLQlYaTiCcedj5-1_kF4Is9YzWgQK5gZGH0Vfc",
+          "mode": "list",
+          "cachedResultName": "Latest BeST v1 data - cordova-cebu - from n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BLId0kLQlYaTiCcedj5-1_kF4Is9YzWgQK5gZGH0Vfc/edit?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -400,
+        0
+      ],
+      "id": "4e7e39af-d9b3-4fa1-a289-efb2b70f2330",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "9ovQcOtWDAKmpUlT",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nreturn items.map(item => ({\n  json: {\n    barangay: item.json.barangay,\n    firstname: item.json.firstname,\n    middlename: item.json.middlename,\n    lastname: item.json.lastname,\n  }\n}));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        592,
+        16
+      ],
+      "id": "2affbe65-f620-4781-9c3a-b860e3448a15",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst grouped = {};\n\nfor (const item of items) {\n  const b = item.json.barangay || 'Unknown';\n  if (!grouped[b]) grouped[b] = [];\n  grouped[b].push(item.json);\n}\n\n// Output one item per barangay\nreturn Object.entries(grouped).map(([barangay, residents]) => ({\n  json: { barangay, residents }\n}));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        784,
+        16
+      ],
+      "id": "0f9b43d0-2010-4191-90b2-5ad2b8931057",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const sheet = $input.first().json;\nconst barangay = sheet.barangay;\nconst rows = sheet.residents;\n\nlet csv = 'firstname,middlename,lastname\\n';\n\nfor (const r of rows) {\n  csv += `\"${r.firstname ?? ''}\",\"${r.middlename ?? ''}\",\"${r.lastname ?? ''}\"\\n`;\n}\n\nreturn [{\n  json: { barangay },\n  binary: {\n    data: Buffer.from(csv, 'utf8')\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        976,
+        16
+      ],
+      "id": "deb09bfd-0b12-45b6-b12e-6e20c189b1bd",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "name": "={{$json.barangay}}.csv",
+        "driveId": {
+          "__rl": true,
+          "value": "11cgmMrnfx3DiVZSiRP9jaQ43tFyRJtk0",
+          "mode": "id"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1On4CDeZbdHeWhsvtbdQBt3EZc5ybzDab",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1168,
+        16
+      ],
+      "id": "090d79e3-f67a-44c4-a6b0-b631ee6afd95",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "9ovQcOtWDAKmpUlT",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -208,
+        0
+      ],
+      "id": "f38f17d4-661b-4d7d-86d7-e1e7b6fd7531",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1BLId0kLQlYaTiCcedj5-1_kF4Is9YzWgQK5gZGH0Vfc",
+          "mode": "list",
+          "cachedResultName": "Latest BeST v1 data - cordova-cebu - from n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BLId0kLQlYaTiCcedj5-1_kF4Is9YzWgQK5gZGH0Vfc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $json.barangay }}",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        400,
+        16
+      ],
+      "id": "54f36a64-acd9-4532-b7ea-8775fb5cfb2c",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "5GB4qvnbFrV38kpb",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        80,
+        0
+      ],
+      "id": "a9b79dae-6feb-4cfb-900c-73f245f01e4a",
+      "name": "Loop Over Items1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "9cbe032c-2fc5-4718-b219-35403d9059b1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3741704a66ebce5037fda2e8bfa4ef32f78604219cf5de7d5bf828e9e0fb2422"
+  },
+  "id": "ni9pgPUbei80OD3XHbO_L",
+  "tags": []
+}
